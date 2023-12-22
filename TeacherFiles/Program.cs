@@ -111,7 +111,7 @@ namespace TeacherFiles
                 {
                     foreach (var student in course.Value)
                     {
-                        sw.WriteLine($"{student.ID},{student.FirstName},{student.LastName},,{student.PrimaryEmail}");
+                        sw.WriteLine($"'{student.ID}',{student.FirstName},{student.LastName},,{student.PrimaryEmail}");
                     }
                 }
             }
