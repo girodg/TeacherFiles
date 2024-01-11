@@ -14,7 +14,7 @@ namespace TeacherFiles
         {
 
             List<string> menu = new List<string>()
-            { "1. Select Course", "2. GitHub excel ", "3. Discord Roster", "4. IRs", "5. Course Director Awards", "6. Exit" };
+            { "1. Select Course", "2. GitHub excel ", "3. Discord Roster", "4. IRs", "5. Course Director Awards", "6. Move Repos", "7. Exit" };
 
             int selection;
             bool courseLoaded = false;
@@ -37,21 +37,30 @@ namespace TeacherFiles
                         break;
                     case 2:
                         if (!courseLoaded)
+                        {
                             course = LoadCourse();
+                            courseLoaded = true;
+                        }
                         BuildRosterCSV(course);
                         Console.WriteLine("The file was created.");
                         Console.ReadKey();
                         break;
                     case 3:
                         if (!courseLoaded)
+                        {
                             course = LoadCourse();
+                            courseLoaded = true;
+                        }
                         BuildDiscordRoster(course);
                         Console.WriteLine("The file was created.");
                         Console.ReadKey();
                         break;
                     case 4:
                         if (!courseLoaded)
+                        {
                             course = LoadCourse();
+                            courseLoaded = true;
+                        }
                         string name = string.Empty;
                         Input.GetString("Enter the Course Director's name: ", ref name);
                         MakeFinalIR(course, name);
@@ -60,9 +69,30 @@ namespace TeacherFiles
                         break;
                     case 5:
                         if (!courseLoaded)
+                        {
                             course = LoadCourse();
+                            courseLoaded = true;
+                        }
                         MakeCDAFile(course);
                         Console.WriteLine("The file was created.");
+                        Console.ReadKey();
+                        break;
+
+                    case 6:
+                        if (!courseLoaded)
+                        {
+                            course = LoadCourse();
+                            courseLoaded = true;
+                        }
+                        //
+                        // NOTE: all of the repos must be downloaded to the appropriate C:\Repos folder
+                        // FIRST: copy all of the repo names from the GitHub sheet to a txt file. EX: 2401.txt
+                        //          In the file, enter a line like "SECTION:00" then after that line paste all of the URLs for the section
+                        // SECOND: Make sure you have the folders in the C:\Repos folder and the section folders in the month repo there
+                        //          EX: C:\Repos\2401
+                        //          EX: C:\Repos\2401\00
+                        MoveRepos(course);
+                        Console.WriteLine("Folders moved!");
                         Console.ReadKey();
                         break;
 
@@ -71,6 +101,54 @@ namespace TeacherFiles
                 }
 
             } while (selection != menu.Count);
+        }
+
+        private static void MoveRepos(string course)
+        {
+            int yr = DateTime.Now.Year - 2000;
+            int mn = DateTime.Now.Month;
+            string folder = $"{yr}{mn:D2}";
+            string submissions = $"pg2-{folder}-submissions";
+            string path = Path.Combine(@"C:\Repos", folder);
+            //Console.WriteLine(path);
+            Dictionary<string, List<string>> sections = new Dictionary<string, List<string>>();
+
+            string inFile = Path.Combine(KnownFolders.Downloads.Path, folder + ".txt");
+            using (StreamReader sr = new(inFile))
+            {
+                int section = 0;
+                string destFolder = "00";
+                string? line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    if (line.StartsWith("SECTION"))
+                    {
+                        string[] data = line.Split(':');
+                        destFolder = data[1];
+                        sections.TryAdd(destFolder, new List<string>());
+                    }
+                    else
+                        sections[destFolder].Add(line);
+                }
+            }
+            string subPath = Path.Combine(path, submissions);
+            string subRepoPath;
+            foreach (var item in sections)
+            {
+                string destPath = Path.Combine(path, item.Key);
+                foreach (var section in item.Value)
+                {
+                    //Console.WriteLine($"{item.Key}: {section}");
+                    subRepoPath = Path.Combine(subPath, section);
+                    if (Path.Exists(subRepoPath))
+                    {
+                        string newDestPath = Path.Combine(destPath, section);
+                        //Console.WriteLine($"{subRepoPath,-75} {newDestPath}");
+                        Directory.Move(subRepoPath, newDestPath);
+                    }
+                }
+            }
+
         }
 
         private static string LoadCourse()
