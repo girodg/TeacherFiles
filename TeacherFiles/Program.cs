@@ -14,7 +14,7 @@ namespace TeacherFiles
         {
 
             List<string> menu = new List<string>()
-            { "1. Select Course", "2. GitHub excel ", "3. Discord Roster", "4. IRs", "5. Course Director Awards", "6. Move Repos", "7. Exit" };
+            { "1. Select Course", "2. GitHub excel ", "3. Discord Roster", "4. IRs", "5. Course Director Awards", "6. Move Repos", "7. Attendance List", "8. Exit" };
 
             int selection;
             bool courseLoaded = false;
@@ -96,11 +96,42 @@ namespace TeacherFiles
                         Console.ReadKey();
                         break;
 
+                    case 7:
+                        if (!courseLoaded)
+                        {
+                            course = LoadCourse();
+                            courseLoaded = true;
+                        }
+                        BuildAttendanceList(course);
+                        Console.WriteLine("Attendance list generated!");
+                        Console.ReadKey();
+                        break;
+
+
                     default:
                         break;
                 }
 
             } while (selection != menu.Count);
+        }
+
+
+
+        private static void BuildAttendanceList(string month)
+        {
+            string outFile = Path.Combine(KnownFolders.Downloads.Path, month + "_Attendance.csv");
+            using (StreamWriter sw = new StreamWriter(outFile))
+            {
+                int numRosters = students_.Count;
+                if(students_.TryGetValue("00", out List<Student> campus))
+                {
+                    foreach (var student in campus)
+                    {
+                        sw.WriteLine($"{student.LastName},{student.FirstName} {student.ID}");
+                    }
+                }
+
+            }
         }
 
         private static void MoveRepos(string course)
