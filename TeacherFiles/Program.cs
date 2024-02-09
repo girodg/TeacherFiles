@@ -88,6 +88,7 @@ namespace TeacherFiles
                         // NOTE: all of the repos must be downloaded to the appropriate C:\Repos folder
                         // FIRST: copy all of the repo names from the GitHub sheet to a txt file. EX: 2401.txt
                         //          In the file, enter a line like "SECTION:00" then after that line paste all of the URLs for the section
+                        //        ****  Make sure to remove the directory info and any ".git" extensions  ****
                         // SECOND: Make sure you have the folders in the C:\Repos folder and the section folders in the month repo there
                         //          EX: C:\Repos\2401
                         //          EX: C:\Repos\2401\00
