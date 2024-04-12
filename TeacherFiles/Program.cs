@@ -140,47 +140,55 @@ namespace TeacherFiles
             int yr = DateTime.Now.Year - 2000;
             int mn = DateTime.Now.Month;
             string folder = $"{yr}{mn:D2}";
-            string submissions = $"pg2-{folder}-submissions";
             string path = Path.Combine(@"C:\Repos", folder);
-            //Console.WriteLine(path);
-            Dictionary<string, List<string>> sections = new Dictionary<string, List<string>>();
+            var find = Directory.EnumerateDirectories(path, "*-submissions");
+            if (find.Count() == 1)
+            {
+                DirectoryInfo di = new DirectoryInfo(find.ElementAt(0));
+                string submissions = di.Name;// $"pg2-{folder}-submissions";
 
-            string inFile = Path.Combine(KnownFolders.Downloads.Path, folder + ".txt");
-            using (StreamReader sr = new(inFile))
-            {
-                int section = 0;
-                string destFolder = "00";
-                string? line;
-                while ((line = sr.ReadLine()) != null)
+                //Console.WriteLine(path);
+                Dictionary<string, List<string>> sections = new Dictionary<string, List<string>>();
+
+                string inFile = Path.Combine(KnownFolders.Downloads.Path, folder + ".txt");
+                using (StreamReader sr = new(inFile))
                 {
-                    if (line.StartsWith("SECTION"))
+                    int section = 0;
+                    string destFolder = "00";
+                    string? line;
+                    while ((line = sr.ReadLine()) != null)
                     {
-                        string[] data = line.Split(':');
-                        destFolder = data[1];
-                        sections.TryAdd(destFolder, new List<string>());
-                    }
-                    else
-                        sections[destFolder].Add(line);
-                }
-            }
-            string subPath = Path.Combine(path, submissions);
-            string subRepoPath;
-            foreach (var item in sections)
-            {
-                string destPath = Path.Combine(path, item.Key);
-                foreach (var section in item.Value)
-                {
-                    //Console.WriteLine($"{item.Key}: {section}");
-                    subRepoPath = Path.Combine(subPath, section);
-                    if (Path.Exists(subRepoPath))
-                    {
-                        string newDestPath = Path.Combine(destPath, section);
-                        //Console.WriteLine($"{subRepoPath,-75} {newDestPath}");
-                        Directory.Move(subRepoPath, newDestPath);
+                        if (line.StartsWith("SECTION"))
+                        {
+                            string[] data = line.Split(':');
+                            destFolder = data[1];
+                            sections.TryAdd(destFolder, new List<string>());
+                        }
+                        else
+                            sections[destFolder].Add(line);
                     }
                 }
+                string subPath = Path.Combine(path, submissions);
+                string subRepoPath;
+                foreach (var item in sections)
+                {
+                    string destPath = Path.Combine(path, item.Key);
+                    foreach (var section in item.Value)
+                    {
+                        if (section.Count() > 0)
+                        {
+                            //Console.WriteLine($"{item.Key}: {section}");
+                            subRepoPath = Path.Combine(subPath, section);
+                            if (Path.Exists(subRepoPath))
+                            {
+                                string newDestPath = Path.Combine(destPath, section);
+                                //Console.WriteLine($"{subRepoPath,-75} {newDestPath}");
+                                Directory.Move(subRepoPath, newDestPath);
+                            }
+                        }
+                    }
+                }
             }
-
         }
 
         private static string LoadCourse()
