@@ -128,7 +128,7 @@ namespace TeacherFiles
                 {
                     foreach (var student in campus)
                     {
-                        sw.WriteLine($"{student.LastName},{student.FirstName} {student.ID}");
+                        sw.WriteLine($"{student.LastName},{student.FirstName};{student.ID}");
                     }
                 }
 
