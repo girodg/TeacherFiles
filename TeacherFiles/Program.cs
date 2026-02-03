@@ -289,62 +289,112 @@ namespace TeacherFiles
 
             // READ THE STUDENTS 
             string[] lines = fileContent.Split('\n');
-            int index = 0;
-            //Students.Clear();
-            //List<string> students = new List<string>();
-            string[] headerRow = lines[0].Split(',');
-            int degreeIndex = Array.IndexOf(headerRow, "Degree Program");
-            if (degreeIndex == -1) degreeIndex = 12;
-            foreach (var line in lines)
+
+            using (var lineparser = new TextFieldParser(new StringReader(fileContent)))
             {
-                if (!string.IsNullOrWhiteSpace(line))
+                lineparser.TextFieldType = FieldType.Delimited;
+                lineparser.HasFieldsEnclosedInQuotes = true;
+                lineparser.Delimiters = new string[] { "," };
+                //skip header row
+                var headers = lineparser.ReadFields();
+                int degreeIndex = Array.IndexOf(headers, "Degree Program");
+                if (degreeIndex == -1) degreeIndex = 12;
+
+                while (!lineparser.EndOfData)
                 {
-                    using (var parser = new TextFieldParser(new StringReader(line)))
+                    string[] cols = lineparser.ReadFields();
+
+                    //Console.WriteLine(cols.Length);
+                    char[] trims = new char[] { '\"' };
+                    char[] trims2 = new char[] { '\'' };
+                    if (cols[0].Length > 4) //then it's a student record
                     {
-                        parser.HasFieldsEnclosedInQuotes = true;
-                        parser.Delimiters = new string[] { "," };
-                        if (index == 0) //skip the header row
+                        string id = cols[0].Trim(trims).Trim(trims2);
+                        string name = $"{cols[1].Trim(trims)} {cols[2].Trim(trims)}";
+                        Student nextStudent = new Student()
                         {
-                            index++;
-                            continue;
+                            ID = id,
+                            Name = name,
+                            FirstName = cols[1].Trim(trims),
+                            LastName = cols[2].Trim(trims),
+                            Degree = cols[degreeIndex].Trim(trims),
+                            PrimaryEmail = cols[4].Trim(trims),
+                            PersonalEmail = cols[5].Trim(trims),
+                            BestTime = cols[8],
+                            LastAccess = cols[9].Trim(trims2),
+                            IsOnline = filePath.Contains("-O"),
+                            Section = section
+                        };
+                        nextStudent.AddPhones(cols[6].Trim(trims));
+                        nextStudent.AddPhones(cols[7].Trim(trims));
+                        if (nextStudent.Degree.Contains(','))
+                        {
+                            nextStudent.Degree = nextStudent.Degree.Substring(0, nextStudent.Degree.IndexOf(','));
                         }
-                        string[]? vals = parser.ReadFields();// line.Split(',');
-                        if (vals != null)
+                        nextStudent.Degree += $"{(nextStudent.IsOnline ? "-O" : "-L")}";
+                        students.Add(nextStudent);
+                    }
+                }
+            }
+
+                /*
+                int index = 0;
+                //Students.Clear();
+                //List<string> students = new List<string>();
+                string[] headerRow = lines[0].Split(',');
+                int degreeIndex = Array.IndexOf(headerRow, "Degree Program");
+                if (degreeIndex == -1) degreeIndex = 12;
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line))
+                    {
+                        using (var parser = new TextFieldParser(new StringReader(line)))
                         {
-                            char[] trims = new char[] { '\"' };
-                            char[] trims2 = new char[] { '\'' };
-                            if (vals[0].Length > 4) //then it's a student record
+                            parser.HasFieldsEnclosedInQuotes = true;
+                            parser.Delimiters = new string[] { "," };
+                            if (index == 0) //skip the header row
                             {
-                                string id = vals[0].Trim(trims).Trim(trims2);
-                                string name = $"{vals[1].Trim(trims)} {vals[2].Trim(trims)}";
-                                Student nextStudent = new Student()
+                                index++;
+                                continue;
+                            }
+                            string[]? vals = parser.ReadFields();// line.Split(',');
+                            if (vals != null)
+                            {
+                                char[] trims = new char[] { '\"' };
+                                char[] trims2 = new char[] { '\'' };
+                                if (vals[0].Length > 4) //then it's a student record
                                 {
-                                    ID = id,
-                                    Name = name,
-                                    FirstName = vals[1].Trim(trims),
-                                    LastName = vals[2].Trim(trims),
-                                    Degree = vals[degreeIndex].Trim(trims),
-                                    PrimaryEmail = vals[4].Trim(trims),
-                                    PersonalEmail = vals[5].Trim(trims),
-                                    BestTime = vals[8],
-                                    LastAccess = vals[9].Trim(trims2),
-                                    IsOnline = filePath.Contains("-O"),
-                                    Section = section
-                                };
-                                nextStudent.AddPhones(vals[6].Trim(trims));
-                                nextStudent.AddPhones(vals[7].Trim(trims));
-                                if (nextStudent.Degree.Contains(','))
-                                {
-                                    nextStudent.Degree = nextStudent.Degree.Substring(0, nextStudent.Degree.IndexOf(','));
+                                    string id = vals[0].Trim(trims).Trim(trims2);
+                                    string name = $"{vals[1].Trim(trims)} {vals[2].Trim(trims)}";
+                                    Student nextStudent = new Student()
+                                    {
+                                        ID = id,
+                                        Name = name,
+                                        FirstName = vals[1].Trim(trims),
+                                        LastName = vals[2].Trim(trims),
+                                        Degree = vals[degreeIndex].Trim(trims),
+                                        PrimaryEmail = vals[4].Trim(trims),
+                                        PersonalEmail = vals[5].Trim(trims),
+                                        BestTime = vals[8],
+                                        LastAccess = vals[9].Trim(trims2),
+                                        IsOnline = filePath.Contains("-O"),
+                                        Section = section
+                                    };
+                                    nextStudent.AddPhones(vals[6].Trim(trims));
+                                    nextStudent.AddPhones(vals[7].Trim(trims));
+                                    if (nextStudent.Degree.Contains(','))
+                                    {
+                                        nextStudent.Degree = nextStudent.Degree.Substring(0, nextStudent.Degree.IndexOf(','));
+                                    }
+                                    nextStudent.Degree += $"{(nextStudent.IsOnline ? "-O" : "-L")}";
+                                    students.Add(nextStudent);
                                 }
-                                nextStudent.Degree += $"{(nextStudent.IsOnline ? "-O" : "-L")}";
-                                students.Add(nextStudent);
                             }
                         }
                     }
                 }
+                */
             }
-        }
 
         static void LoadGrades(string course)
         {
